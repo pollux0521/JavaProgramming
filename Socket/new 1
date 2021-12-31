@@ -1,0 +1,172 @@
+import java.util.Vector;
+import java.io.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.event.*;
+
+class Class {
+ private String _name;
+ private String _code;
+
+ public Class(String name, String code) {
+  _name = name;
+  _code = code;
+ }
+
+ public int print() {
+  System.out.println(_name + " " + _code);
+  return 0;
+ }
+
+ public String getName() { return _name; }
+ public String getCode() { return _code; }
+}
+
+class ClassFileLoader{
+ private ClassManager _classes;
+
+ public ClassFileLoader(String fName, ClassManager classes) { 
+  _classes = classes;
+  loadToClasses(fName);
+ }
+
+ public int loadToClasses(String fName) {
+  try {
+   File file = new File(fName);
+   FileReader fReader = new FileReader(file);
+   BufferedReader bufReader = new BufferedReader(fReader);
+   String line = "";
+   String[] str;
+
+   while((line = bufReader.readLine()) != null) {
+    str = line.split("\\,");
+    _classes.add(new Class(str[0], str[1]));
+   }
+   bufReader.close();
+   fReader.close(); 
+  } 
+  catch(FileNotFoundException e) { } 
+  catch(IOException e) { }
+
+  return 0;
+ }
+}
+
+class ConfirmRegWindow extends JFrame {
+ ConfirmRegWindow(Class c){
+        setTitle("Confirm Registration");
+        JPanel NewWindowContainer = new JPanel();
+        setContentPane(NewWindowContainer);
+
+        JLabel NewLabel = new JLabel(c.getName() + " added!");
+
+        NewWindowContainer.add(NewLabel);
+
+        setSize(300,100);
+        setResizable(false);
+        setVisible(true);
+    }
+}
+
+class ChoosingClassWindow extends JFrame {
+ private JList<String> _cList;
+ private ClassManager _classes;
+ private ClassManager _regClasses;
+ public ChoosingClassWindow(ClassManager classes) { 
+  _classes = classes;
+  _regClasses = new ClassManager();
+  initGUI(); 
+ }
+
+ public int initGUI() {
+  setTitle("Class Registration");
+  setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+  Container cp = getContentPane();
+  cp.setLayout(new FlowLayout());
+
+  _cList = new JList<String>(_classes.getCNStringList());
+
+  _cList.addMouseListener(new MouseAdapter() {
+   public void mouseClicked(MouseEvent me) {
+    if (me.getClickCount() == 2) {
+     Class c = null;
+     c = _classes.search(_cList.getSelectedValue());
+     if(c!=null) {
+      new ConfirmRegWindow(c);
+      _regClasses.add(c);
+     }
+    }
+   }
+   });
+
+  cp.add(new JScrollPane(_cList));
+
+  setSize(300,300);
+  setVisible(true);
+
+
+  return 0;
+ }
+
+ private int reglistener() {
+
+  return 0;
+ }
+}
+
+public class ClassManager{
+ private Vector<Class> _classes;
+
+ public ClassManager() { _classes = new Vector<Class>(); }
+
+ public int add(Class c) {
+  _classes.add(c);
+  return 0;
+ }
+
+ public int printAll() {
+  int i = 0;
+  for(i = 0; i < _classes.size(); i++) {
+   _classes.get(i).print();
+  }
+  return 0;
+ }
+
+ public Class getClass(int i) { return _classes.get(i); }
+ public int getSize() { return _classes.size(); }
+ public Vector<String> getCNStringList() { 
+  Vector<String> classNames = new Vector<String>();
+  for(int i=0; i < _classes.size(); i++) {
+   classNames.add(_classes.get(i).getName());
+  }
+  return classNames; 
+ }
+
+ public Class search(String str) {
+  for(int i=0; i < _classes.size(); i++) {
+   if(str.equals(_classes.get(i).getName())) {
+   // System.out.println(str);
+    return _classes.get(i);
+   }
+  }
+  for(int i=0; i < _classes.size(); i++) {
+   if(str.equals(_classes.get(i).getCode())) {
+    return _classes.get(i);
+   }
+  }
+  /* Find and return the class with name or code matching the parameter str */
+  return null;
+
+ }
+
+ public static void main(String[] args) {
+  ClassManager cm = new ClassManager();
+  ClassFileLoader cf = new ClassFileLoader("classes.txt", cm);
+  cm.printAll();
+  
+  
+  //cm.loadFile("classes.txt");
+  ChoosingClassWindow classWindow = new ChoosingClassWindow(cm);
+ }
+}
